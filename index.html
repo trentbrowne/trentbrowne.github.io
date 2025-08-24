@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Configurable Timer</title>
+  <style>
+    body {
+      margin: 0;
+      background: transparent; 
+    }
+    #timer {
+      position: absolute;
+      bottom: 20px;   
+      right: 20px;
+      background: rgba(0,0,0,0.7); 
+      color: white;
+      font-family: Arial, sans-serif;
+      font-size: 3vw;  
+      padding: 10px 20px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="timer">--:--</div>
+
+  <script>
+    function startCountdown(duration, display) {
+      let timer = duration, minutes, seconds;
+      const interval = setInterval(() => {
+        minutes = Math.floor(timer / 60);
+        seconds = timer % 60;
+
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+
+        display.textContent = minutes + ":" + seconds;
+
+        if (--timer < 0) {
+          clearInterval(interval);   // stop when reaching 0
+          display.textContent = "00:00"; // freeze at zero
+        }
+      }, 1000);
+    }
+
+    window.onload = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      let duration = parseInt(urlParams.get("time"), 10);
+
+      // fallback to 120s if no valid ?time=
+      if (isNaN(duration) || duration <= 0) {
+        duration = 120;
+      }
+
+      let display = document.querySelector('#timer');
+      startCountdown(duration, display);
+    };
+  </script>
+</body>
+</html>
