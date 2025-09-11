@@ -13,13 +13,11 @@
       position: absolute;
       bottom: 32px;
       right: 32px;
-
       font-family: Arial, sans-serif;
       font-weight: 600;
-      font-variant-numeric: tabular-nums; 
+      font-variant-numeric: tabular-nums;
       line-height: 1;
       font-size: clamp(40px, 4.8vw, 96px);
-
       color: #fff;
       background: rgba(0,0,0,0.72);
       padding: 14px 28px;
@@ -32,11 +30,15 @@
   <div id="timer">--:--</div>
 
   <script>
+    let countdownInterval;
+
     function startCountdown(duration, display) {
-      let timer = duration, minutes, seconds;
-      const interval = setInterval(() => {
-        minutes = Math.floor(timer / 60);
-        seconds = timer % 60;
+      clearInterval(countdownInterval); // reset if already running
+      let timer = duration;
+
+      countdownInterval = setInterval(() => {
+        let minutes = Math.floor(timer / 60);
+        let seconds = timer % 60;
 
         minutes = minutes < 10 ? "0" + minutes : minutes;
         seconds = seconds < 10 ? "0" + seconds : seconds;
@@ -44,19 +46,30 @@
         display.textContent = minutes + ":" + seconds;
 
         if (--timer < 0) {
-          clearInterval(interval);      // stop at zero
+          clearInterval(countdownInterval);
           display.textContent = "00:00";
         }
       }, 1000);
     }
 
-    window.onload = () => {
+    function initTimer() {
       const urlParams = new URLSearchParams(window.location.search);
       let duration = parseInt(urlParams.get("time"), 10);
       if (isNaN(duration) || duration <= 0) duration = 120; // default 2 min
 
-      startCountdown(duration, document.querySelector('#timer'));
-    };
+      let display = document.querySelector('#timer');
+      startCountdown(duration, display);
+    }
+
+    // Start when first loaded
+    initTimer();
+
+    // Restart whenever the slide becomes visible again
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        initTimer();
+      }
+    });
   </script>
 </body>
 </html>
