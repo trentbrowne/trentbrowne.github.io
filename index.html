@@ -61,10 +61,8 @@
       startCountdown(duration, display);
     }
 
-    // Start when first loaded
     initTimer();
 
-    // Restart whenever the slide becomes visible again
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) {
         initTimer();
