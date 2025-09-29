@@ -4,13 +4,12 @@
   <meta charset="UTF-8">
   <title>Configurable Timer</title>
   <style>
-    html, body {
+    body {
       margin: 0;
-      padding: 0;
-      background: transparent !important; /* force transparency */
+      background: transparent;
       overflow: hidden;
-      height: 100%;
-      width: 100%;
+      height: 100vh;
+      width: 100vw;
     }
     #timer {
       display: flex;
@@ -19,10 +18,10 @@
       height: 100%;
       width: 100%;
       font-family: Arial, sans-serif;
-      font-weight: 600;
+      font-weight: 700;
       font-variant-numeric: tabular-nums;
       line-height: 1;
-      font-size: clamp(40px, 6vw, 96px);
+      font-size: clamp(80px, 15vw, 200px); /* Bigger + scalable */
       color: #fff;
       background: rgba(0,0,0,0.72);
       border-radius: 16px;
@@ -35,28 +34,23 @@
 
   <script>
     let countdownInterval;
-    let remainingTime = 0;
-    let isPaused = false;
 
     function startCountdown(duration, display) {
       clearInterval(countdownInterval); // reset if already running
-      remainingTime = duration;
-      isPaused = false;
+      let timer = duration;
 
       countdownInterval = setInterval(() => {
-        if (!isPaused) {
-          let minutes = Math.floor(remainingTime / 60);
-          let seconds = remainingTime % 60;
+        let minutes = Math.floor(timer / 60);
+        let seconds = timer % 60;
 
-          minutes = minutes < 10 ? "0" + minutes : minutes;
-          seconds = seconds < 10 ? "0" + seconds : seconds;
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
 
-          display.textContent = minutes + ":" + seconds;
+        display.textContent = minutes + ":" + seconds;
 
-          if (--remainingTime < 0) {
-            clearInterval(countdownInterval);
-            display.textContent = "00:00";
-          }
+        if (--timer < 0) {
+          clearInterval(countdownInterval);
+          display.textContent = "00:00";
         }
       }, 1000);
     }
@@ -70,16 +64,6 @@
       startCountdown(duration, display);
     }
 
-    // Controls via query params: ?time=300&pause=true
-    function checkControls() {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get("pause") === "true") {
-        isPaused = true;
-      } else if (urlParams.get("pause") === "false") {
-        isPaused = false;
-      }
-    }
-
     // Start when first loaded
     initTimer();
 
@@ -89,10 +73,8 @@
         initTimer();
       }
     });
-
-    // Check for pause/resume flag every 2s
-    setInterval(checkControls, 2000);
   </script>
 </body>
 </html>
+
 
