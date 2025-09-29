@@ -1,121 +1,76 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Configurable Timer</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <style>
-    body {
-      margin: 0;
-      background: transparent;
-      overflow: hidden;
-    }
-    #timer {
-      position: absolute;
-      bottom: 32px;
-      right: 32px;
-      font-family: Arial, sans-serif;
-      font-weight: 600;
-      font-variant-numeric: tabular-nums;
-      line-height: 1;
-      font-size: clamp(40px, 4.8vw, 96px);
-      color: #fff;
-      background: rgba(0,0,0,0.72);
-      padding: 14px 28px;
-      border-radius: 16px;
-      box-shadow: 0 8px 28px rgba(0,0,0,0.35);
-    }
-  </style>
+  <meta charset="UTF-8">
+  <title>Fullscreen Timer</title>
+  <style>
+    body {
+      margin: 0;
+      background: transparent;
+      overflow: hidden;
+      display: flex;
+      align-items: center;     /* vertical center */
+      justify-content: center; /* horizontal center */
+      height: 100vh;           /* full viewport height */
+      width: 100vw;            /* full viewport width */
+    }
+    #timer {
+      font-family: Arial, sans-serif;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      font-size: clamp(40px, 12vw, 160px); /* adjust as needed */
+      color: #fff;
+      background: rgba(0,0,0,0.72);
+      padding: 20px 40px;
+      border-radius: 20px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
-  <div id="timer">--:--</div>
+  <div id="timer">--:--</div>
 
-  <script>
-    // ---- CONFIG / PARSE URL ----
-    const urlParams = new URLSearchParams(window.location.search);
-    // time in seconds; default 120
-    const DEFAULT_SECONDS = 120;
-    let configuredSeconds = parseInt(urlParams.get("time"), 10);
-    if (isNaN(configuredSeconds) || configuredSeconds <= 0) {
-      configuredSeconds = DEFAULT_SECONDS;
-    }
+  <script>
+    let countdownInterval;
 
-    // ---- STATE ----
-    const displayEl = document.getElementById('timer');
-    let tickIntervalId = null;
-    let endTimeMs = null; // timestamp when timer should hit zero
+    function startCountdown(duration, display) {
+      clearInterval(countdownInterval); // reset if already running
+      let timer = duration;
 
-    // ---- UTIL ----
-    function formatSeconds(s) {
-      if (s <= 0) return "00:00";
-      const m = Math.floor(s / 60);
-      const sec = s % 60;
-      return String(m).padStart(2, "0") + ":" + String(sec).padStart(2, "0");
-    }
+      countdownInterval = setInterval(() => {
+        const minutes = String(Math.floor(timer / 60)).padStart(2, "0");
+        const seconds = String(timer % 60).padStart(2, "0");
 
-    function setDisplaySeconds(s) {
-      displayEl.textContent = formatSeconds(s);
-    }
+        display.textContent = minutes + ":" + seconds;
 
-    // ---- TIMER CORE ----
-    function startTimerFullDuration() {
-      clearInterval(tickIntervalId);
-      const duration = Math.max(0, Math.floor(configuredSeconds));
-      endTimeMs = Date.now() + duration * 1000;
+        if (--timer < 0) {
+          clearInterval(countdownInterval);
+          display.textContent = "00:00";
+        }
+      }, 1000);
+    }
 
-      setDisplaySeconds(duration);
+    function initTimer() {
+      const urlParams = new URLSearchParams(window.location.search);
+      let duration = parseInt(urlParams.get("time"), 10);
+      if (isNaN(duration) || duration <= 0) duration = 120; // default 2 min
 
-      tickIntervalId = setInterval(() => {
-        const remainingMs = endTimeMs - Date.now();
-        const remainingSec = Math.ceil(remainingMs / 1000); // round up to avoid showing -0
-        if (remainingSec <= 0) {
-          clearInterval(tickIntervalId);
-          setDisplaySeconds(0);
-        } else {
-          setDisplaySeconds(remainingSec);
-        }
-      }, 200);
-    }
+      let display = document.querySelector('#timer');
+      startCountdown(duration, display);
+    }
 
-    function stopTimer() {
-      clearInterval(tickIntervalId);
-      tickIntervalId = null;
-    }
+    // Start when first loaded
+    initTimer();
 
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) {
-        startTimerFullDuration();
-      } else {
-        stopTimer();
-      }
-    });
-
-    window.addEventListener('focus', () => startTimerFullDuration());
-    window.addEventListener('pageshow', () => startTimerFullDuration());
-
-    try {
-      const io = new IntersectionObserver(entries => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            startTimerFullDuration();
-            return;
-          }
-        }
-      }, { threshold: 0.05 });
-      io.observe(document.documentElement);
-    } catch (e) {
-    }
-
-    window.addEventListener('message', (ev) => {
-      if (ev && ev.data && (ev.data === 'slideActive' || ev.data === 'yodeck-slide-active')) {
-        startTimerFullDuration();
-      }
-    });
-
-    // ---- INITIAL START ----
-    startTimerFullDuration();
-
-    window.__resetTimerForDebug = startTimerFullDuration;
-  </script>
+    // Restart whenever the slide becomes visible again
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        initTimer();
+      }
+    });
+  </script>
 </body>
 </html>
+
