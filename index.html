@@ -2,30 +2,31 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Fullscreen Timer</title>
+  <title>Configurable Timer</title>
   <style>
-    body {
+    html, body {
       margin: 0;
-      background: transparent;
+      padding: 0;
+      background: transparent !important; /* force transparency */
       overflow: hidden;
-      display: flex;
-      align-items: center;     /* vertical center */
-      justify-content: center; /* horizontal center */
-      height: 100vh;           /* full viewport height */
-      width: 100vw;            /* full viewport width */
+      height: 100%;
+      width: 100%;
     }
     #timer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      width: 100%;
       font-family: Arial, sans-serif;
       font-weight: 600;
       font-variant-numeric: tabular-nums;
       line-height: 1;
-      font-size: clamp(40px, 12vw, 160px); /* adjust as needed */
+      font-size: clamp(40px, 6vw, 96px);
       color: #fff;
       background: rgba(0,0,0,0.72);
-      padding: 20px 40px;
-      border-radius: 20px;
+      border-radius: 16px;
       box-shadow: 0 8px 28px rgba(0,0,0,0.35);
-      text-align: center;
     }
   </style>
 </head>
@@ -34,20 +35,28 @@
 
   <script>
     let countdownInterval;
+    let remainingTime = 0;
+    let isPaused = false;
 
     function startCountdown(duration, display) {
       clearInterval(countdownInterval); // reset if already running
-      let timer = duration;
+      remainingTime = duration;
+      isPaused = false;
 
       countdownInterval = setInterval(() => {
-        const minutes = String(Math.floor(timer / 60)).padStart(2, "0");
-        const seconds = String(timer % 60).padStart(2, "0");
+        if (!isPaused) {
+          let minutes = Math.floor(remainingTime / 60);
+          let seconds = remainingTime % 60;
 
-        display.textContent = minutes + ":" + seconds;
+          minutes = minutes < 10 ? "0" + minutes : minutes;
+          seconds = seconds < 10 ? "0" + seconds : seconds;
 
-        if (--timer < 0) {
-          clearInterval(countdownInterval);
-          display.textContent = "00:00";
+          display.textContent = minutes + ":" + seconds;
+
+          if (--remainingTime < 0) {
+            clearInterval(countdownInterval);
+            display.textContent = "00:00";
+          }
         }
       }, 1000);
     }
@@ -61,6 +70,16 @@
       startCountdown(duration, display);
     }
 
+    // Controls via query params: ?time=300&pause=true
+    function checkControls() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("pause") === "true") {
+        isPaused = true;
+      } else if (urlParams.get("pause") === "false") {
+        isPaused = false;
+      }
+    }
+
     // Start when first loaded
     initTimer();
 
@@ -70,6 +89,9 @@
         initTimer();
       }
     });
+
+    // Check for pause/resume flag every 2s
+    setInterval(checkControls, 2000);
   </script>
 </body>
 </html>
